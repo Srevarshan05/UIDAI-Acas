@@ -1,9 +1,10 @@
 // Test script to verify Google Sheets API data fetching
 const axios = require('axios');
+require('dotenv').config({ path: '.env.local' });
 
-const API_KEY = 'AIzaSyAYJOLTMligFmJmJRv8aKHaGSqW9TLxFfI';
-const SHEET_ID = '1zmKUeplCU7AWkdqgfsKEhEUzjiqpGP0obepV0_iGyQ0';
-const RANGE = 'ACAS Dhristi LOG';
+const API_KEY = process.env.NEXT_PUBLIC_GOOGLE_API_KEY || 'YOUR_API_KEY_HERE';
+const SHEET_ID = process.env.NEXT_PUBLIC_SHEET_ID || '1zmKUeplCU7AWkdqgfsKEhEUzjiqpGP0obepV0_iGyQ0';
+const RANGE = process.env.NEXT_PUBLIC_SHEET_RANGE || 'ACAS Dhristi LOG';
 
 async function testGoogleSheetsAPI() {
   console.log('🔍 Testing Google Sheets API Connection...\n');
