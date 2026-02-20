@@ -1,0 +1,596 @@
+{
+  "name": "Aadhaar Capacity Advisory System ( ACAS )",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "acas-ingest",
+        "options": {}
+      },
+      "id": "76810bfc-5fad-4f05-b2d8-a6444a101a5a",
+      "name": "Webhook: Receive AI Batch",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        -96,
+        160
+      ],
+      "webhookId": "sevai-pulse-ingest"
+    },
+    {
+      "parameters": {
+        "jsCode": "// --- ACAS DHRISTI FORCE-DETECTION ENGINE (V14) ---\nlet finalResults = [];\n\n// 1. DATA DRILLING\nlet rawData = items[0].json;\nlet cleanArray = [];\n\nif (Array.isArray(rawData)) {\n  cleanArray = rawData;\n} else if (rawData.body && Array.isArray(rawData.body)) {\n  cleanArray = rawData.body;\n} else if (rawData.data && Array.isArray(rawData.data)) {\n  cleanArray = rawData.data;\n} else {\n  cleanArray = [rawData];\n}\n\n// 2. PROCESSING EVERY PINCODE\nfor (let data of cleanArray) {\n  // --- NEW: Generate Unique Acknowledgment ID ---\n  let requestID = Math.random().toString(36).substring(2, 10) + Date.now().toString(36).slice(-4);\n\n  let stress = parseFloat(data.spatial_risk_index || 0);\n  let bio = parseFloat(data.total_bio_demand || 0);\n  let lead = parseFloat(data.student_demo_lead_7d || 0);\n  \n  let tier = \"LEVEL 1: STABLE\";\n  let priority = 1;\n  let analysis = \"Operational telemetry aligned with regional baseline.\";\n  let action = \"Standard operational maintenance.\";\n\n  if (stress > 50 && bio > 100) {\n    tier = \"LEVEL 5: EMERGENCY LOAD\";\n    priority = 5;\n    analysis = `CRITICAL: Infrastructure bottleneck at PIN ${data.pincode}.`;\n    action = \"Deploy Mobile Aadhaar Vans and pause non-mandatory updates.\";\n  } \n  else if (stress > 30 || bio > 150) {\n    tier = \"LEVEL 4: SATURATED OPS\";\n    priority = 4;\n    analysis = \"Peak biometric capacity reached at center.\";\n    action = \"Activate 2nd-Shift Verifiers.\";\n  } \n  else if (lead > 2.5) {\n    tier = \"LEVEL 3: MISSION MODE\";\n    priority = 3;\n    analysis = `Student enrolment surge (Lead: ${lead.toFixed(1)}) detected.`;\n    action = \"Dedicate Counter #1 for Student Mission.\";\n  } \n  else if (stress > 15) {\n    tier = \"LEVEL 2: ACTIVE MONITOR\";\n    priority = 2;\n    analysis = \"Low-level network pressure from neighboring nodes.\";\n    action = \"Monitor wait times; prepare local surge protocols.\";\n  }\n\n  // 3. RETURN INDIVIDUAL ITEMS\n  finalResults.push({\n    json: {\n      Request_ID: requestID, // --- ADDED FOR TRACKING ---\n      timestamp: new Date().toLocaleString(),\n      pincode: data.pincode ? data.pincode.toString() : \"N/A\",\n      district: data.district || \"N/A\",\n      operational_status: tier,\n      priority_level: priority,\n      risk_score: stress.toFixed(2),\n      audit_reasoning: analysis,\n      action_pathway: action,\n      identity: data.base_identity || \"General\",\n      ack_status: \"Pending\" // --- ADDED FOR GSheet INITIAL LOG ---\n    }\n  });\n}\n\nreturn finalResults;"
+      },
+      "id": "2229b1cb-9cf7-43a7-8dff-fecc5261995d",
+      "name": "Code: Decision Engine",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        160,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "1zmKUeplCU7AWkdqgfsKEhEUzjiqpGP0obepV0_iGyQ0"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "ACAS Dhristi LOG"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Timestamp": "={{ $now.toLocaleString() }}",
+            "District": "={{ $json.district }}",
+            "Pincode": "={{ $json.pincode }}",
+            "Status": "={{ $json.operational_status }}",
+            "Priority": "={{ $json.priority_level }}",
+            "Reasoning": "={{ $json.audit_reasoning }}",
+            "Pathway": "={{ $json.action_pathway }}",
+            "Risk_Score": "={{ $json.risk_score }}",
+            "Identity": "={{ $json.identity }}",
+            "Request_ID": "={{ $json.Request_ID }}"
+          },
+          "matchingColumns": [
+            "Timestamp"
+          ],
+          "schema": [
+            {
+              "id": "Timestamp",
+              "displayName": "Timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Pincode",
+              "displayName": "Pincode",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "District",
+              "displayName": "District",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Priority",
+              "displayName": "Priority",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Reasoning",
+              "displayName": "Reasoning",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Pathway",
+              "displayName": "Pathway",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Risk_Score",
+              "displayName": "Risk_Score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Identity",
+              "displayName": "Identity",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Request_ID",
+              "displayName": "Request_ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "b15374ce-1c90-477f-912e-9197fe924f78",
+      "name": "GSheet: Global Audit",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [
+        416,
+        160
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "xLke9acolMYTouzH",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "value1": "={{ $json.Priority }}",
+        "rules": {
+          "rules": [
+            {
+              "operation": "largerEqual",
+              "value2": 4
+            },
+            {
+              "operation": "equal",
+              "value2": 3,
+              "output": 1
+            },
+            {
+              "operation": "equal",
+              "value2": 2,
+              "output": 2
+            },
+            {
+              "operation": "equal",
+              "value2": 1,
+              "output": 3
+            }
+          ]
+        }
+      },
+      "id": "c1c75dc1-e183-4f67-9581-c262cbf33d30",
+      "name": "Switch: Escalation Router",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 1,
+      "position": [
+        672,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "srevarshan9600622@gmail.com",
+        "subject": "=URGENT: Level {{ $json.Priority }} Infrastructure Capacity Alert - {{ $json.District }} [Ref: {{ $json.Pincode }}]",
+        "message": "=<div style=\"max-width: 650px; margin: 20px auto; background-color: #ffffff; border: 1px solid #1a237e; border-top: 5px solid #b71c1c; font-family: 'Segoe UI', Arial, sans-serif; color: #212121;\">\n  <div style=\"padding: 20px; background-color: #f8f9fa; border-bottom: 1px solid #e0e0e0; text-align: center;\">\n    <div style=\"font-weight: bold; color: #1a237e; font-size: 16px; letter-spacing: 1px;\">Unique Identification Authority of India (UIDAI)</div>\n    <div style=\"font-size: 12px; color: #546e7a; margin-top: 4px; font-weight: 600;\">AADHAAR CAPACITY ADVISORY SYSTEM (ACAS) | ஆதார் திறன் ஆலோசனை அமைப்பு</div>\n  </div>\n\n  <div style=\"padding: 25px;\">\n    <h2 style=\"color: #b71c1c; font-size: 19px; margin-top: 0; border-bottom: 1px solid #ffcdd2; padding-bottom: 10px;\">Infrastructure Stress Crisis / உள்கட்டமைப்பு அழுத்தம்</h2>\n    \n    <table style=\"width: 100%; font-size: 14px; border-collapse: collapse; margin: 20px 0;\">\n      <tr style=\"background-color: #fcfcfc;\">\n        <td style=\"padding: 10px; font-weight: 600; width: 40%;\">District / மாவட்டம்:</td>\n        <td style=\"padding: 10px; color: #1a237e; font-weight: 700;\">{{ $json.District }}</td>\n      </tr>\n      <tr>\n        <td style=\"padding: 10px; font-weight: 600;\">Administrative PIN / அஞ்சல் குறியீடு:</td>\n        <td style=\"padding: 10px;\">{{ $json.Pincode }}</td>\n      </tr>\n      <tr style=\"background-color: #fcfcfc;\">\n        <td style=\"padding: 10px; font-weight: 600;\">System Status / தற்போதைய நிலை:</td>\n        <td style=\"padding: 10px; color: #b71c1c; font-weight: 700;\">{{ $json.Status }}</td>\n      </tr>\n    </table>\n\n    <div style=\"background-color: #fff9f9; border-left: 4px solid #b71c1c; padding: 15px; margin-bottom: 20px;\">\n      <div style=\"font-weight: 700; color: #b71c1c; margin-bottom: 5px;\">Required Administrative Pathway / நிர்வாக அறிவுறுத்தல்:</div>\n      <div style=\"font-size: 15px; line-height: 1.6;\">{{ $json.Pathway }}</div>\n    </div>\n\n    <div style=\"font-size: 13px; line-height: 1.5; color: #455a64; padding: 15px; background-color: #f5f5f5; border-radius: 4px; margin-bottom: 25px;\">\n      <strong>Algorithmic Decision Support / வழிமுறை முடிவெடுக்கும் ஆதரவு:</strong><br>\n      {{ $json.Reasoning }}\n    </div>\n\n    <div style=\"text-align: center; margin: 20px 0;\">\n      <a href=\"https://modern-only-cockatoo.ngrok-free.app/webhook/acas-ack?id={{ $json.Request_ID }}&role=DistrictCollector\" \n         style=\"background-color: #b71c1c; color: #ffffff; padding: 12px 25px; text-decoration: none; border-radius: 4px; font-weight: bold; font-size: 14px; display: inline-block;\">\n         ACKNOWLEDGE RECEIPT / உறுதிப்படுத்தவும்\n      </a>\n    </div>\n  </div>\n\n  <div style=\"padding: 15px 25px; background-color: #fafafa; border-top: 1px solid #eee; font-size: 11px; text-align: center; color: #78909c;\">\n    Transmission ID: {{ $json.Timestamp }} | Identity Context: {{ $json.Identity }}<br>\n    <strong>OFFICIAL GOVERNMENT COMMUNICATION | அரசாங்கத்தின் அதிகாரப்பூர்வ தகவல்</strong>\n  </div>\n</div>",
+        "options": {}
+      },
+      "id": "ae139326-e711-4888-a178-1f58cc5fd327",
+      "name": "Gmail: District Collector",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [
+        960,
+        -48
+      ],
+      "webhookId": "9f042970-1661-45be-8358-8050b59478a2",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "b4MWr6OV6ucIHFO6",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "ss2535@srmist.edu.in",
+        "subject": "=Strategic Capacity Optimization Advisory - {{ $json.District }} [Ref: ACAS-{{ $json.Pincode }}]",
+        "message": "=<div style=\"max-width: 650px; margin: 20px auto; background-color: #ffffff; border: 1px solid #0d47a1; border-top: 5px solid #0d47a1; font-family: 'Segoe UI', Arial, sans-serif; color: #212121;\">\n  <div style=\"padding: 20px; background-color: #f8f9fa; border-bottom: 1px solid #e0e0e0; text-align: center;\">\n    <div style=\"font-weight: bold; color: #0d47a1; font-size: 16px;\">Unique Identification Authority of India (UIDAI)</div>\n    <div style=\"font-size: 12px; color: #546e7a; margin-top: 4px; font-weight: 600;\">AADHAAR CAPACITY ADVISORY SYSTEM (ACAS) | ஆதார் திறன் ஆலோசனை அமைப்பு</div>\n  </div>\n\n  <div style=\"padding: 25px;\">\n    <h2 style=\"color: #0d47a1; font-size: 18px; margin-top: 0;\">Resource Allocation Advisory / ஆதார ஒதுக்கீடு ஆலோசனை</h2>\n    \n    <div style=\"border: 1px solid #e3f2fd; border-radius: 4px; overflow: hidden; margin: 15px 0;\">\n      <div style=\"background-color: #e3f2fd; padding: 10px 15px; font-weight: 600; font-size: 13px;\">TELEMETRY DATA / தரவுத் தகவல்</div>\n      <div style=\"padding: 15px; font-size: 14px;\">\n        <strong>District / மாவட்டம்:</strong> {{ $json.District }} (PIN: {{ $json.Pincode }})<br>\n        <strong>Operational Status / செயல்பாட்டு நிலை:</strong> {{ $json.Status }}\n      </div>\n    </div>\n\n    <div style=\"padding: 15px; background-color: #f1f8e9; border-left: 4px solid #388e3c; margin-bottom: 20px;\">\n      <div style=\"font-weight: 700; color: #2e7d32; margin-bottom: 5px;\">Workflow Pathway / பணிப்பாய்வு அறிவுறுத்தல்:</div>\n      <div style=\"font-size: 14px;\">{{ $json.Pathway }}</div>\n    </div>\n\n    <div style=\"font-size: 13px; color: #37474f; font-style: italic; margin-bottom: 20px;\">\n      <strong>Justification / விளக்கம்:</strong> {{ $json.Reasoning }}\n    </div>\n\n    <div style=\"text-align: center; margin: 20px 0;\">\n      <a href=\"https://modern-only-cockatoo.ngrok-free.app/webhook-test/acas-ack?id={{ $json.Request_ID }}&role=DistrictCoordinator\" \n         style=\"background-color: #0d47a1; color: #ffffff; padding: 12px 25px; text-decoration: none; border-radius: 4px; font-weight: bold; font-size: 14px; display: inline-block;\">\n         ACKNOWLEDGE ADVISORY / உறுதிப்படுத்தவும்\n      </a>\n    </div>\n  </div>\n\n  <div style=\"padding: 15px 25px; border-top: 1px solid #f1f1f1; font-size: 10px; text-align: center; color: #90a4ae;\">\n    Authenticated by ACAS Decision Support Hub | Priority: {{ $json.Priority }}<br>\n    <strong>STRICTLY FOR INTERNAL UIDAI USE | ஆதார் ஆணையத்தின் உள் பயன்பாட்டிற்கு மட்டும்</strong>\n  </div>\n</div>",
+        "options": {}
+      },
+      "id": "c69603ea-407a-4dcd-ae39-99e2d3a38ca6",
+      "name": "Gmail: District Coordinator",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [
+        960,
+        160
+      ],
+      "webhookId": "718e903a-ebc5-4229-b57e-8506466675c8",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "b4MWr6OV6ucIHFO6",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "srevarshan9600622@gmail.com",
+        "subject": "=Daily Ground Operational Update - Pincode {{ $json.Pincode }} [ACAS Portal]",
+        "message": "=<div style=\"max-width: 650px; margin: 20px auto; background-color: #ffffff; border: 1px solid #37474f; border-top: 5px solid #37474f; font-family: 'Segoe UI', Arial, sans-serif;\">\n  <div style=\"padding: 15px; background-color: #eceff1; text-align: center;\">\n    <div style=\"font-weight: bold; color: #263238; font-size: 15px;\">Unique Identification Authority of India (UIDAI)</div>\n    <div style=\"font-size: 11px; color: #607d8b; font-weight: bold;\">ACAS GROUND MONITORING | ஆதார் திறன் கண்காணிப்பு</div>\n  </div>\n\n  <div style=\"padding: 20px;\">\n    <div style=\"font-size: 16px; font-weight: 700; color: #37474f; margin-bottom: 15px;\">Ground Activity Notice / கள செயல்பாட்டு அறிவிப்பு</div>\n    \n    <div style=\"font-size: 14px; margin-bottom: 20px;\">\n      <strong>Location / இடம்:</strong> {{ $json.District }} - {{ $json.Pincode }}<br>\n      <strong>Current Status / நிலை:</strong> {{ $json.Status }}\n    </div>\n\n    <div style=\"padding: 15px; background-color: #e8f5e9; border-radius: 4px; font-size: 14px; color: #1b5e20; margin-bottom: 15px;\">\n      <strong>Required Action / செய்ய வேண்டியவை:</strong><br>\n      {{ $json.Pathway }}\n    </div>\n\n    <div style=\"margin-top: 15px; font-size: 12px; color: #78909c; margin-bottom: 20px;\">\n      <strong>Note / குறிப்பு:</strong> {{ $json.Reasoning }}\n    </div>\n\n    <div style=\"text-align: center;\">\n      <a href=\"https://modern-only-cockatoo.ngrok-free.app/webhook-test/acas-ack?id={{ $json.Request_ID }}&role=CenterManager\" \n         style=\"background-color: #388e3c; color: #ffffff; padding: 10px 20px; text-decoration: none; border-radius: 4px; font-weight: bold; font-size: 13px; display: inline-block;\">\n         CONFIRM ACTION / உறுதிப்படுத்தவும்\n      </a>\n    </div>\n  </div>\n\n  <div style=\"padding: 12px; font-size: 10px; text-align: center; color: #b0bec5; border-top: 1px solid #f1f1f1;\">\n    Log Ref: {{ $json.Timestamp }} | Sector: {{ $json.Identity }}\n  </div>\n</div>",
+        "options": {}
+      },
+      "id": "9a00e659-f2e4-442d-90f4-0499f5c44d97",
+      "name": "Gmail: Center Manager",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [
+        1056,
+        320
+      ],
+      "webhookId": "dd59264e-636c-4ef5-8839-b83ccd38385c",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "b4MWr6OV6ucIHFO6",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "path": "acas-ack",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        96,
+        464
+      ],
+      "id": "1aec21b0-7770-40b1-86b0-7cbf7f414846",
+      "name": "Webhook",
+      "webhookId": "9ded4e6b-7e68-48ad-8a6b-ac1004efc5dc"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "1zmKUeplCU7AWkdqgfsKEhEUzjiqpGP0obepV0_iGyQ0"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "ACAS Dhristi LOG"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Timestamp": "={{ $now.toLocaleString() }}",
+            "Request_ID": "={{ $json.query.id }}",
+            "row_number": 0,
+            "Ack_Status": "Acknowledged"
+          },
+          "matchingColumns": [
+            "Request_ID"
+          ],
+          "schema": [
+            {
+              "id": "Timestamp",
+              "displayName": "Timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Pincode",
+              "displayName": "Pincode",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "District",
+              "displayName": "District",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Priority",
+              "displayName": "Priority",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Reasoning",
+              "displayName": "Reasoning",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Pathway",
+              "displayName": "Pathway",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Risk_Score",
+              "displayName": "Risk_Score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Identity",
+              "displayName": "Identity",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Request_ID",
+              "displayName": "Request_ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Ack_Status",
+              "displayName": "Ack_Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "9f6f6378-5366-4ef7-a985-3ea957380e66",
+      "name": "GSheet: Global Audit1",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [
+        368,
+        464
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "xLke9acolMYTouzH",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "=<div style=\"\n  max-width: 640px;\n  margin: 80px auto;\n  padding: 30px 34px;\n  border: 1px solid #e0e0e0;\n  border-top: 6px solid #f57c00;\n  border-radius: 4px;\n  background-color: #ffffff;\n  font-family: Arial, 'Helvetica Neue', 'Noto Sans', 'Segoe UI', sans-serif;\n  color: #263238;\n  text-align: center;\n\">\n\n  <!-- Authority Header -->\n  <div style=\"\n    font-size: 14px;\n    letter-spacing: 0.4px;\n    font-weight: bold;\n    color: #424242;\n    margin-bottom: 18px;\n  \">\n    UNIQUE IDENTIFICATION AUTHORITY OF INDIA\n  </div>\n\n  <!-- Verified Badge -->\n  <div style=\"\n    display: inline-block;\n    padding: 6px 14px;\n    font-size: 12px;\n    font-weight: 600;\n    color: #1b5e20;\n    background-color: #e8f5e9;\n    border: 1px solid #c8e6c9;\n    border-radius: 20px;\n    margin-bottom: 18px;\n  \">\n    ✔ ACKNOWLEDGEMENT VERIFIED & RECORDED\n  </div>\n\n  <!-- Main Status -->\n  <div style=\"\n    font-size: 20px;\n    font-weight: 700;\n    color: #1a237e;\n    margin: 14px 0 10px 0;\n  \">\n    Acknowledgement Successfully Logged\n  </div>\n\n  <!-- English Text -->\n  <div style=\"\n    font-size: 16px;\n    color: #37474f;\n    line-height: 1.65;\n    margin-bottom: 8px;\n  \">\n    Your confirmation has been securely recorded in the Aadhaar Capacity Advisory System\n    and marked as <strong>verified</strong> for operational audit purposes.\n  </div>\n\n  <!-- Tamil Text -->\n  <div style=\"\n    font-size: 15px;\n    color: #455a64;\n    line-height: 1.65;\n    margin-bottom: 26px;\n  \">\n    உங்கள் உறுதிப்படுத்தல் ஆதார் திறன் ஆலோசனை அமைப்பில் பாதுகாப்பாக பதிவு செய்யப்பட்டு,\n    செயல்பாட்டு தணிக்கைக்காக <strong>சரிபார்க்கப்பட்டது</strong>.\n  </div>\n\n  <!-- Footer Notice -->\n  <div style=\"\n    font-size: 12px;\n    color: #607d8b;\n    border-top: 1px solid #eeeeee;\n    padding-top: 14px;\n  \">\n    This acknowledgement is system-generated and time-stamped.<br>\n    No further action is required at this stage.\n  </div>\n\n  <!-- System Identity -->\n  <div style=\"\n    margin-top: 10px;\n    font-size: 11px;\n    color: #9e9e9e;\n  \">\n    ACAS | UIDAI Operational Decision-Support System\n  </div>\n\n</div>\n",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "text/html"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        592,
+        512
+      ],
+      "id": "ca23b400-9983-494f-9520-074f83d4e29b",
+      "name": "Respond to Webhook"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook: Receive AI Batch": {
+      "main": [
+        [
+          {
+            "node": "Code: Decision Engine",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Decision Engine": {
+      "main": [
+        [
+          {
+            "node": "GSheet: Global Audit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch: Escalation Router": {
+      "main": [
+        [
+          {
+            "node": "Gmail: District Collector",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Gmail: District Coordinator",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Gmail: Center Manager",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GSheet: Global Audit": {
+      "main": [
+        [
+          {
+            "node": "Switch: Escalation Router",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "GSheet: Global Audit1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GSheet: Global Audit1": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "timezone": "Asia/Kolkata",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "936eb9a7-d4bc-40f2-8ffd-6a9c95a7f503",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "90195be70067a5090f0b69b6b7567fd7eae30c47f9b28f1bc8fbf62933cf01b3"
+  },
+  "id": "eVBHlBDtxSKSV8wq",
+  "tags": []
+}
