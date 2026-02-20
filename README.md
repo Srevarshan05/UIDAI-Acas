@@ -21,16 +21,16 @@
 ## 📸 System Visualizations
 
 ### Predictive Governance Dashboard
-![Dashboard Overview](automation/ACAS-Logic.png)
+![Dashboard Overview](Automation/ACAS-Logic.png)
 
 ### Live Spatial Stress Map (P1-P5 Risk Zones)
-![Spatial Stress Map](automation/ACAS-Realtime-Map.png)
+![Spatial Stress Map](Automation/ACAS-Realtime-Map.png)
 
 ### Real-Time Intelligence & Audit Log
-![Real-Time Intelligence Log](automation/ACAS-Agent-log.png)
+![Real-Time Intelligence Log](Automation/ACAS-Agent-log.png)
 
 ### Autonomous Agentic Workflow (n8n)
-![n8n Workflow](automation/ACAS-n8n.png)
+![n8n Workflow](Automation/ACAS-n8n.png)
 *View the raw workflow routing logic here: [ACAS n8n Workflow JSON](automation/ACAS-n8n-Workflow.json)*
 
 ---
