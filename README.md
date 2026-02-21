@@ -31,7 +31,7 @@
 
 ### Autonomous Agentic Workflow (n8n)
 ![n8n Workflow](Automation/ACAS-n8n.png)
-*View the raw workflow routing logic here: [ACAS n8n Workflow JSON](automation/ACAS-n8n-Workflow.json)*
+*View the raw workflow routing logic here: [ACAS n8n Workflow JSON](Automation/ACAS-n8n-Workflow.json)*
 
 ---
 
